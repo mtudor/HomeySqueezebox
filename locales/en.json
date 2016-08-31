@@ -1,1 +1,22 @@
-{}
+{
+    "pair": {
+        "title": "Please enter your Squeezbox server address and port:",
+        "sip": "IP address (0.0.0.0)",
+        "sid": "Server port (9000)",
+        "button_get": "Get players",
+        "button_save": "Save",
+        "button_done": "Done",
+        "msg_invalidData": "Server address and/or port field empty.",
+        "msg_invalidAddressData": "Invalid server ip/name or port",
+        "msg_noDevices": "Unable to save, no players haven been found. Please correct the settings and test again.",
+        "msg_foundPlayers": "Found __devices__ player(s)",
+        "msg_addedDevices": "Succesfully added __devices__ Squeezebox player(s) to Homey",
+        "msg_errorAddingDevice": "Error while adding new Squeebox player(s) to Homey: __errorMsg__",
+        "msg_wasErrorWhileAdding": "While adding one of the devices, an error occured. Please check the devices list."
+      },
+
+      "app": {
+          "msg_playlistNotFoundOnServer": "No playlists with name \"__playlistName__\" found on server \"__serverName__\"",
+          "msg_timoutOnAction": "Timout while performing action"
+      }
+}

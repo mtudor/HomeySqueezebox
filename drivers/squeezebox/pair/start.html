@@ -1,0 +1,199 @@
+<style type="text/css">
+	.input-wrap {
+		position: relative;
+	}
+	.fa {
+		position: absolute;
+		margin-left: 5px;
+		margin-top: 7px;
+		opacity: 0;
+		visibility: hidden;
+		transition: all 0.3s;
+	}
+	.fa.visible {
+		opacity: 1;
+		visibility: visible;
+	}
+	.form-group input[type="text"] {
+		width: 160px;
+	}
+</style>
+
+<p class="form-group">
+	<label for="address"><span data-i18n="pair.title"></span></label>
+
+	<span class="input-wrap">
+		<input type="text" id="address" placeholder="Address (IP or hostname)" value="" />
+	</span>
+	<span class="input-wrap">
+		<input type="text" id="port" placeholder="Server port (e.g. 9000)" value="9000" />
+		<button class="button" id="validate" data-i18n="pair.button_get">Get players</button>
+		<i class="smile-status smile-loading fa fa-circle-o-notch fa-spin"></i>
+		<i class="smile-status smile-ok fa fa-check" style="color: #96ff00;"></i>
+		<i class="smile-status smile-err fa fa-times" style="color: #ff6300;"></i>
+	</span>
+
+</p>
+<p class="smile-err-msg" style="color: #ff6300;">
+</p>
+<p>
+	<button class="button" id="save" data-i18n="pair.button_save">Save</button>
+</p>
+
+<script type="text/javascript">
+
+	devices = {};
+
+	$(function(){
+		$('#validate').click(function() {
+
+			// Reset all visuals
+			$('.smile-status').removeClass('visible');
+			$('.smile-ok').removeClass('visible');
+			$('.smile-err').removeClass('visible');
+			$('.smile-err-msg').html('');
+
+			var address = $('#address').val();
+			var port = $('#port').val();
+
+			// Initial support for http and https, currently not available in user UI
+			var protocol = "http://";
+
+			if (protocol && port && address) {
+
+				$('.smile-loading').addClass('visible');
+
+				Homey.emit('validate', {
+					protocol: protocol,
+					address: address,
+					port: port
+					}, function( error, reply ) {
+						$('.smile-status').removeClass('visible');
+
+						if(!error) {
+							// connection validation successful, start searching for Squeezebox players
+							Homey.emit('list_players', {
+								protocol: protocol,
+								address: address,
+								port: port
+								}, function( error, devices ){
+
+									console.log('list players error:', error);
+									console.log('list players devices:', devices);
+									
+									if (!error) {
+
+										$('.smile-ok').addClass('visible');
+										$('.smile-err-msg').html(__('pair.msg_foundPlayers', { "devices": devices.length }));
+										
+										this.devices = devices;
+
+									} else {
+										$('.smile-err').addClass('visible');
+										$('.smile-err-msg').html( error.Error || error.toString() );
+									}
+								});
+
+							} else {
+								//connection validation unsuccessfull
+								$('.smile-err').addClass('visible');
+								$('.smile-err-msg').html( error.Error || error.toString() );
+							}
+					})	//end of validate / pairing procedure
+			} else {
+				$('.smile-err').addClass('visible');
+				$('.smile-err-msg').html( __('pair.msg_invalidData') );
+			}
+		});
+	})
+
+	$(function(){
+		$('#save').click(function() {
+
+			if (devices && devices.length > 0) {
+				 $('#save').prop('disabled', true);
+
+				 var errorWhileAdding = false;
+				 var count = 0;
+				
+				devices.forEach(addDeviceToHomey);
+				Homey.done();
+				/*
+				for (var device in devices) {
+					console.log('Device to check', device);
+					Homey.emit('checkForKnownDevices', device , function( error, exists ) {
+						if (error) {
+							errorWhileAdding = true;
+							Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": error}));
+						} else if (!exists) {
+							addDeviceToHomey(device);
+							count++;
+						} else if (exists) {
+							console.log('Device already in Homey ', device.id);
+						}
+					});
+				}
+
+				if (!errorWhileAdding) {
+					Homey.alert( __('pair.msg_addedDevices', { "devices": count }) );
+					Homey.done();
+				} else {
+					$('.smile-err-msg').html( __('pair.msg_wasErrorWhileAdding') );
+
+					// TODO find a nicer solution with a appearing done button.
+
+					var timeout = setTimeout(function() {
+						Homey.done();
+					}, 5000);
+				}
+				*/ 	
+			} else {
+				$('.smile-err-msg').html( __('pair.msg_noDevices') );
+				$('#save').prop('disabled', false);
+			}
+
+			function addDeviceToHomey(device) {
+				console.log('Add device to Homey', device);
+
+				var address = $('#address').val();
+				var port = $('#port').val();
+
+				// Initial support for http and https, currently not available in user UI
+				var protocol = "http://";
+
+				var device_data_init = {
+					id		: device.data.id,
+				};
+				var settings_init = {
+					id			: device.data.id,
+					homey_name	: device.name,
+					player_name	: device.name,
+					protocol	: protocol,
+					server		: address,
+					port		: port,
+					mac			: device.data.id
+				};
+
+				console.log('init settings', settings_init);
+
+				Homey.addDevice({
+					data	: device_data_init,
+					name	: device.name,
+					settings: settings_init
+					}, function( err, result ){
+						if( err ) {
+							console.log('Add device error: ', err);
+							var errorMsg = err.message || err.toString();
+							return Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": errorMsg}));
+						}
+					});		// end of addDevice
+			}
+		});
+	})
+
+	$(function(){
+		$('#done').click(function() {
+			Homey.done();
+		})
+	})
+</script>

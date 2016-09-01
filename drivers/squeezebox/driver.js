@@ -206,6 +206,8 @@ module.exports.init = function(devices_data, callback) {
             });
         });
     });
+
+    callback(null, true); // Let Homey know init is done.
 };
 
 module.exports.pair = function (socket) {

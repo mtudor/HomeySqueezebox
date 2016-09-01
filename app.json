@@ -29,6 +29,30 @@
     "dependencies": {
         "squeezenode": "*"
     },
+    "capabilities": {
+        "play_stop": {
+            "type": "enum",
+            "title": {
+                "en": "Play/stop"
+            },
+            "values": [
+                {
+                    "id": "sq_play",
+                    "title": {
+                        "en": "sq play"
+                    }
+                },
+                {
+                    "id": "sq_stop",
+                    "title": {
+                        "en": "sq stop"
+                    }
+                }
+            ],
+            "getable": true,
+            "setable": true
+        }
+    },
     "drivers": [
         {
             "id": "squeezebox",
@@ -42,7 +66,8 @@
             "class": "other",
             "capabilities": [
                 "onoff",
-                "volume_set"
+                "volume_set",
+                "play_stop"
             ],
             "pair": [
                 {
@@ -50,13 +75,19 @@
                 }
             ],
             "mobile": {
-                "components": [ 
-					{
-						"id":"toggle",
-						"capabilities":[
-							"onoff"
-						]
-					}
+                "components": [
+                    {
+                        "id":"icon",
+                        "capabilities":["onoff"]
+                    },
+                    {
+                        "id":"slider",
+                        "capabilities":["volume_set"]
+					},
+                    {
+                        "id":"picker",
+                        "capabilities":["play_stop"]
+                    }
                 ]
             }
         }
@@ -65,6 +96,32 @@
         "triggers": [
         ],
         "actions": [
+            {
+                "id": "off",
+                "title": {
+                    "en": "Power off"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
+            {
+                "id": "on",
+                "title": {
+                    "en": "Power on"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
             {
                 "id": "volume",
                 "title": {

@@ -25,8 +25,37 @@ module.exports.init = function(devices_data, callback) {
     Homey.log("init in driver.js started");
     devices_data.forEach(initDevice);
 
+    Homey.manager('flow').on('action.off', function (callback, args) {
+        Homey.log('flow action off');
+        Homey.manager('drivers').getDriver('squeezebox').capabilities.onoff.set(
+            args.device,
+            false,
+            function (err, success) {
+                // Notify Homey of success of failure, respectively.
+                if (typeof callback == 'function') {
+                    callback(null, !err && success);
+                }
+            }
+        );
+    });
+
+    Homey.manager('flow').on('action.on', function (callback, args) {
+        Homey.log('flow action on');
+        Homey.manager('drivers').getDriver('squeezebox').capabilities.onoff.set(
+            args.device,
+            true,
+            function (err, success) {
+                // Notify Homey of success of failure, respectively.
+                if (typeof callback == 'function') {
+                    callback(null, !err && success);
+                }
+            }
+        );
+    });
+
     Homey.manager('flow').on('action.play', function (callback, args) {
-        Homey.manager('drivers').getDriver('squeezebox').capabilities.play.set(
+        Homey.log('flow action play');
+        Homey.manager('drivers').getDriver('squeezebox').capabilities.play_stop.set(
             args.device,
             true,
             function (err, success) {
@@ -39,9 +68,10 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.pause', function (callback, args) {
-        Homey.manager('drivers').getDriver('squeezebox').capabilities.pause.set(
+        Homey.log('flow action pause');
+        Homey.manager('drivers').getDriver('squeezebox').capabilities.play_stop.set(
             args.device,
-            true,
+            false,
             function (err, success) {
                 // Notify Homey of success of failure, respectively.
                 if (typeof callback == 'function') {
@@ -52,19 +82,20 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.volume', function (callback, args) {
-        Homey.manager('drivers').getDriver('squeezebox').capabilities.volume.set(
+        Homey.log('flow action volume');
+        Homey.manager('drivers').getDriver('squeezebox').capabilities.volume_set.set(
             args.device,
-            args.volume,
+            args.volume/100,
             function (err, success) {
                 if (typeof callback == 'function') {
                     callback(null, !err && success);
-                };
+                }
             }
         );
     });
 
     Homey.manager('flow').on('action.playPlaylist', function (callback, args) {
-
+        Homey.log('flow action play playlist');
         var device = devices[args.device.id];
         var url = device.protocol + device.server;
 
@@ -129,7 +160,7 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.next', function (callback, args) {
-
+        Homey.log('flow action next');
         var device = devices[args.device.id];
         var url = device.protocol + device.server;
 
@@ -145,7 +176,7 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.previous', function (callback, args) {
-
+        Homey.log('flow action previous');
         var device = devices[args.device.id];
         var url = device.protocol + device.server;
 
@@ -161,7 +192,7 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.seek', function (callback, args) {
-
+        Homey.log('flow action seek');
         var device = devices[args.device.id];
         var url = device.protocol + device.server;
 
@@ -250,97 +281,58 @@ module.exports.capabilities = {
     onoff: {
         // Retrieve whether the specified Squeezebox is currently on or off.
         get: function( device_data, callback ) {
-            Homey.log('capabilities onoff get');
-            callback(null, true);   // Always same value for now
+            Homey.log('capabilities onoff get for device:', device_data.id);
+
+            var device = devices[device_data.id];
+            var url = device.protocol + device.server;
+
+            var SqueezeServer = require('squeezenode');
+            var mySqueezeServer = new SqueezeServer(url, device.port);
+
+            mySqueezeServer.on('register', function () {
+                mySqueezeServer.players[device.id].getStatus(function (reply) {
+                    if (reply.ok) {
+                        var power = reply.result.power;
+                        if (power == 1) {
+                            callback(null, true);
+                            Homey.log('Device is switched on');
+                        } else {
+                            Homey.log('Device is switched off');
+                            callback(null, false);
+                        }
+                    } else {
+                        callback(true, null);
+                    }
+                });
+            });
         },
 
         set: function( device_data, turnon, callback ) {
-            Homey.log('capabilities onoff set');
-            if (turnon) {
-                callback(null, true);
-            } else {
-                callback(null, true);
-            }
-        }
-    },
+            Homey.log('capabilities onoff set for device:', device_data.id);
 
-    play: {
-        // Retrieve whether the specified Squeezebox is currently playing.
-        get: function (device_data, callback) {
-            // TODO: Support retrieving whether a Squeezebox is currently playing. device_data is the object saved
-            // during pairing and callback should return the state in the format callback(err, value).
-            Homey.log('capabilities play get');
-            callback(null, true);   // Always same value for now
-        },
-
-        // Start the specified Squeezebox playing whatever is currently in its playlist.
-        set: function (device_data, value, callback) {
             // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
-            Homey.log('capabilities play set');
-
             var device = devices[device_data.id];
             var url = device.protocol + device.server;
 
             var SqueezeServer = require('squeezenode');
             var mySqueezeServer = new SqueezeServer(url, device.port);
-
-            var timeout = setTimeout(function() {
-                if(typeof callback == 'function') {
-                    Homey.log('Timed out, cancel operation');
-                    callback(__(msg_timoutOnAction), false);
-                }
-            }, defaultTimout);
 
             // TODO: Detect failures. Is there a way to send the new play state to Homey.
-            // Start playing on the specified squeezebox.
+            // Turn the specified squeezebox on or off.
             mySqueezeServer.on('register', function () {
-                mySqueezeServer.players[device_data.id].play();
-                if(typeof callback == 'function') {
-                    clearTimeout(timeout);
-                    callback(null, true);
-                }
+                mySqueezeServer.players[device_data.id].power(turnon, function (reply) {
+                    if(reply.ok) callback(null, true);
+                    else callback(null, false);
+                });
             });
         }
     },
 
-    pause: {
-        // Retrieve whether the specified Squeezebox is currently paused.
-        get: function (device_data, callback) {
-            Homey.log('capabilities pause get');
-            // TODO: Support retrieving whether a Squeezebox is currently playing. device_data is the object saved
-            // during pairing and callback should return the state in the format callback(err, value).
-            callback(null, false);   // Always same value for now
-        },
-
-        // TODO: Currently pausing a paused Squeezebox will start it playing again. Is this what we want?
-        // Pause the specified Squeezebox.
-        set: function (device_data, value, callback) {
-            // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
-            Homey.log('capabilities pause set');
-
-            var device = devices[device_data.id];
-            var url = device.protocol + device.server;
-
-            var SqueezeServer = require('squeezenode');
-            var mySqueezeServer = new SqueezeServer(url, device.port);
-
-            // Pause the specified Squeezebox.
-            mySqueezeServer.on('register', function () {
-                mySqueezeServer.players[device_data.id].pause();
-
-                // TODO: Detect failures. Is there a way to send the new pause state to Homey.
-                if(typeof callback == 'function') {
-                    callback(null, true);
-                }
-            });
-        }
-    },
-
-    volume: {
+    volume_set: {
         // Retrieve the current volume level of the specified Squeezebox.
         get: function (device_data, callback) {
             // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
-            Homey.log('capabilities volume get');
+            Homey.log('capabilities volume get for device:', device_data.id);
 
             var device = devices[device_data.id];
             var url = device.protocol + device.server;
@@ -351,19 +343,23 @@ module.exports.capabilities = {
             // Get the volume level of the specified SqueezePlayer.
             var volume;
             mySqueezeServer.on('register', function () {
-                volume = mySqueezeServer.players[device_data.id].getVolume();
-
-                // Send the volume level to Homey.
-                if (typeof callback == 'function') {
-                    callback(null, volume);
-                }
+                mySqueezeServer.players[device_data.id].getVolume(function (reply) {
+                    if (reply.ok) {
+                        var volume = parseFloat(reply.result);
+                        volume = volume/100;                    // Homey range is between 0 and 1
+                        Homey.log('volume is', volume);
+                        callback(null, volume);
+                    } else {
+                        callback(true, null);
+                    }
+                });
             });
         },
 
         // Set the volume level of the specified Squeezebox.
-        set: function (device_data, value, callback) {
+        set: function (device_data, volume, callback) {
             // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
-            Homey.log('capabilities volume set');
+            Homey.log('capabilities volume set for device:', device_data.id, 'to', volume);
 
             var device = devices[device_data.id];
             var url = device.protocol + device.server;
@@ -373,11 +369,68 @@ module.exports.capabilities = {
 
             // Set the volume level of the specified Squeezebox.
             mySqueezeServer.on('register', function () {
-                mySqueezeServer.players[device_data.id].setVolume(value);
+                mySqueezeServer.players[device_data.id].setVolume(volume*100);
 
                 // TODO: Detect failures. Is there a way to return the new volume level and if so should volume level be
                 // read from the Squeezebox, rather than just parroted back?
                 if (typeof callback == 'function') {
+                    callback(null, true);
+                }
+            });
+        }
+    },
+
+    play_stop: {
+        // Retrieve whether the specified Squeezebox is currently playing.
+        get: function (device_data, callback) {
+            // TODO: Support retrieving whether a Squeezebox is currently playing. device_data is the object saved
+            // during pairing and callback should return the state in the format callback(err, value).
+            Homey.log('capabilities play_stop get for device:', device_data.id);
+
+            var device = devices[device_data.id];
+            var url = device.protocol + device.server;
+
+            var SqueezeServer = require('squeezenode');
+            var mySqueezeServer = new SqueezeServer(url, device.port);
+
+            mySqueezeServer.on('register', function () {
+                mySqueezeServer.players[device.id].getStatus(function (reply) {
+                    if (reply.ok) {
+                        Homey.log(reply);
+                    } else {
+                        callback(true, reply);
+                    }
+                });
+            });
+        },
+
+        // Start the specified Squeezebox playing whatever is currently in its playlist.
+        set: function (device_data, play, callback) {
+            // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
+            Homey.log('capabilities play_stop set for device:', device_data.id);
+
+            var device = devices[device_data.id];
+            var url = device.protocol + device.server;
+
+            var SqueezeServer = require('squeezenode');
+            var mySqueezeServer = new SqueezeServer(url, device.port);
+
+            // TODO: Detect failures. Is there a way to send the new play state to Homey.
+            // Start playing on the specified squeezebox.
+            mySqueezeServer.on('register', function () {
+
+                if (play) {
+                    Homey.log('Start playing for device:', device_data.id);
+                    mySqueezeServer.players[device_data.id].play(function (reply) {
+                        if (reply.ok) callback(null, true);
+                        else callback(true, reply);             // send reply because of error
+                    });
+                } else {
+                    Homey.log('Pause playing for device:', device_data.id);
+                    mySqueezeServer.players[device_data.id].pause(function (reply) {
+                        if (reply.ok) callback(null, true);
+                        else callback(true, reply);             // send reply because of error
+                    });
                     callback(null, true);
                 }
             });

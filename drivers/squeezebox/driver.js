@@ -1,11 +1,9 @@
 "use strict";
 
 var devices = {};
-var defaultTimout = 3000;
 
 function hasValue(string) {
-    if (typeof string != 'undefined' && string != null) return true;
-    else return false;
+    return !!(typeof string != 'undefined' && string != null);
 }
 
 function checkServerData(server_data) {
@@ -62,7 +60,7 @@ module.exports.init = function(devices_data, callback) {
                 // Notify Homey of success of failure, respectively.
                 if (typeof callback == 'function') {
                     callback(null, !err && success);
-                };
+                }
             }
         );
     });
@@ -76,7 +74,7 @@ module.exports.init = function(devices_data, callback) {
                 // Notify Homey of success of failure, respectively.
                 if (typeof callback == 'function') {
                     callback(null, !err && success);
-                };
+                }
             }
         );
     });
@@ -310,7 +308,7 @@ module.exports.capabilities = {
         },
 
         set: function( device_data, turnon, callback ) {
-            Homey.log('capabilities onoff set for device:', device_data.id);
+            Homey.log('capabilities onoff set for device:', device_data.id, 'to', turnon);
 
             // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
             var device = devices[device_data.id];
@@ -348,7 +346,8 @@ module.exports.capabilities = {
                 mySqueezeServer.players[device_data.id].getVolume(function (reply) {
                     if (reply.ok) {
                         var volume = parseFloat(reply.result);
-                        volume = volume/100;                    // Homey range is between 0 and 1
+                        if (volume < 0 || volume > 100) volume = 50;
+                        volume = volume/100;                    // Homey slider range is between 0 and 1
                         Homey.log('volume is', volume);
                         callback(null, volume);
                     } else {
@@ -398,7 +397,17 @@ module.exports.capabilities = {
             mySqueezeServer.on('register', function () {
                 mySqueezeServer.players[device.id].getStatus(function (reply) {
                     if (reply.ok) {
-                        Homey.log(reply);
+                        if (reply.result.mode == "play") {
+                            Homey.log('return play');
+                            callback(null, "sq_play");
+                        } else if (reply.result.mode == "stop") {
+                            Homey.log('return stop');
+                            callback(null, "sq_stop");
+                        } else if (reply.result.mode == "pause") {
+                            Homey.log('return stop');
+                            callback(null, "sq_stop");
+                        } else callback(true, reply);
+
                     } else {
                         callback(true, reply);
                     }
@@ -409,7 +418,9 @@ module.exports.capabilities = {
         // Start the specified Squeezebox playing whatever is currently in its playlist.
         set: function (device_data, play, callback) {
             // TODO: The instantiation of mySqueezeServer is currently NOT DRY. Should it be done once only? Memory?
-            Homey.log('capabilities play_stop set for device:', device_data.id);
+            Homey.log('capabilities play_stop set for device:', device_data.id, 'to', play);
+            Homey.log('device_data', device_data);
+            Homey.log('play', play);
 
             var device = devices[device_data.id];
             var url = device.protocol + device.server;
@@ -421,7 +432,7 @@ module.exports.capabilities = {
             // Start playing on the specified squeezebox.
             mySqueezeServer.on('register', function () {
 
-                if (play) {
+                if (play == true || play == "sq_play") {
                     Homey.log('Start playing for device:', device_data.id);
                     mySqueezeServer.players[device_data.id].play(function (reply) {
                         if (reply.ok) callback(null, true);
@@ -435,6 +446,31 @@ module.exports.capabilities = {
                     });
                     callback(null, true);
                 }
+            });
+        }
+    },
+
+    metadata: {
+        // Retrieve whether the specified Squeezebox is currently playing.
+        get: function (device_data, callback) {
+            // TODO: Support retrieving whether a Squeezebox is currently playing. device_data is the object saved
+            // during pairing and callback should return the state in the format callback(err, value).
+            Homey.log('capabilities metadata get for device:', device_data.id);
+
+            var device = devices[device_data.id];
+            var url = device.protocol + device.server;
+
+            var SqueezeServer = require('squeezenode');
+            var mySqueezeServer = new SqueezeServer(url, device.port);
+
+            mySqueezeServer.on('register', function () {
+                mySqueezeServer.players[device.id].getCurrentRemoteMeta(function (reply) {
+                    var title = reply.result.title;
+                    var artist = reply.result.artist;
+                    var metadata_text = title + "\n" + artist;
+                    Homey.log(metadata_text);
+                    callback(false, metadata_text);
+                });
             });
         }
     }
@@ -494,7 +530,7 @@ function validateConnection(server_data, callback) {  // Validate Smile connecti
     } catch (error) {
         callback(true, error);
     }
-};
+}
 
 function listPlayers(server_data, callback) {  // Validate Smile connection data
     Homey.log('List players on server', server_data);
@@ -526,7 +562,7 @@ function listPlayers(server_data, callback) {  // Validate Smile connection data
                     devices.push({
                         name: reply.result[id].name,
                         data: {
-                            id: reply.result[id].playerid,
+                            id: reply.result[id].playerid
                         }
                     });
                 }
@@ -551,4 +587,4 @@ function listPlayers(server_data, callback) {  // Validate Smile connection data
     } catch (error) {
         callback(true, error);
     }
-};
+}

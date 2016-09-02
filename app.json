@@ -33,24 +33,32 @@
         "play_stop": {
             "type": "enum",
             "title": {
-                "en": "Play/stop"
+                "en": "Play and stop"
             },
             "values": [
                 {
                     "id": "sq_play",
                     "title": {
-                        "en": "sq play"
+                        "en": "Play"
                     }
                 },
                 {
                     "id": "sq_stop",
                     "title": {
-                        "en": "sq stop"
+                        "en": "Stop"
                     }
                 }
             ],
             "getable": true,
             "setable": true
+        },
+        "metadata": {
+            "type": "string",
+            "title": {
+                "en": "Metadata"
+            },
+            "getable": true,
+            "setable": false
         }
     },
     "drivers": [
@@ -66,8 +74,9 @@
             "class": "other",
             "capabilities": [
                 "onoff",
+                "play_stop",
                 "volume_set",
-                "play_stop"
+                "metadata"
             ],
             "pair": [
                 {
@@ -81,13 +90,13 @@
                         "capabilities":["onoff"]
                     },
                     {
-                        "id":"slider",
-                        "capabilities":["volume_set"]
-					},
-                    {
                         "id":"picker",
                         "capabilities":["play_stop"]
-                    }
+                    },
+                    {
+                        "id":"slider",
+                        "capabilities":["volume_set"]
+					}
                 ]
             }
         }

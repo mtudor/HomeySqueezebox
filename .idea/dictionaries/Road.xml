@@ -8,7 +8,11 @@
       <w>logitech</w>
       <w>onoff</w>
       <w>setable</w>
+      <w>signalstrength</w>
+      <w>squeezbox</w>
       <w>squeezenode</w>
+      <w>ssdp</w>
+      <w>turnon</w>
     </words>
   </dictionary>
 </component>

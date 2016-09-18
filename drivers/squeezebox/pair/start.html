@@ -18,40 +18,65 @@
 		width: 160px;
 	}
 </style>
+<!--
+<p class="form_group" id="search-group">
+	<label for="search" data-i18n="pair.title">Title</label><br>
+	<button class="button" id="search" data-i18n="pair.button_search">Search</button><br>
+</p>
+-->
 
-<p class="form-group">
-	<label for="address"><span data-i18n="pair.title"></span></label>
+<div id="holder">
+</div>
 
+<p class="auto-err-msg" style="color: #ff6300;">
+</p>
+
+<p class="form-group" id="manual-group">
 	<span class="input-wrap">
+		<label for="address" data-i18n="pair.title_manual">Manual</label>
 		<input type="text" id="address" placeholder="Address (IP or hostname)" value="" />
-	</span>
-	<span class="input-wrap">
 		<input type="text" id="port" placeholder="Server port (e.g. 9000)" value="9000" />
 		<button class="button" id="validate" data-i18n="pair.button_get">Get players</button>
 		<i class="smile-status smile-loading fa fa-circle-o-notch fa-spin"></i>
 		<i class="smile-status smile-ok fa fa-check" style="color: #96ff00;"></i>
 		<i class="smile-status smile-err fa fa-times" style="color: #ff6300;"></i>
 	</span>
+</p>
 
+<p class="manual-err-msg" style="color: #ff6300;">
 </p>
-<p class="smile-err-msg" style="color: #ff6300;">
-</p>
-<p>
+
+<span>
 	<button class="button" id="save" data-i18n="pair.button_save">Save</button>
-</p>
+</span>
 
 <script type="text/javascript">
 
 	devices = {};
 
 	$(function(){
+		$('#search').click(function() {
+
+			$('.manual-group').hide();
+			// TODO Hide manual options, above code not working
+
+			// find_servers
+			Homey.emit('find_servers', function(error, foundDevices) {
+				console.log('error', error);
+				console.log('found devices', foundDevices);
+
+				$("#holder").append('<input type="radio" name="servers">' + foundDevices[0].address + '</input>');
+			});
+		});
+
 		$('#validate').click(function() {
 
 			// Reset all visuals
 			$('.smile-status').removeClass('visible');
 			$('.smile-ok').removeClass('visible');
 			$('.smile-err').removeClass('visible');
-			$('.smile-err-msg').html('');
+			$('.manual-err-msg').html('');
+
 
 			var address = $('#address').val();
 			var port = $('#port').val();
@@ -84,72 +109,51 @@
 									if (!error) {
 
 										$('.smile-ok').addClass('visible');
-										$('.smile-err-msg').html(__('pair.msg_foundPlayers', { "devices": devices.length }));
+										$('.manual-err-msg').html(__('pair.msg_foundPlayers', { "devices": devices.length }));
 										
 										this.devices = devices;
 
 									} else {
 										$('.smile-err').addClass('visible');
-										$('.smile-err-msg').html( error.Error || error.toString() );
+										$('.manual-err-msg').html( reply.toString() );
 									}
 								});
 
 							} else {
-								//connection validation unsuccessfull
+								//connection validation unsuccessful
 								$('.smile-err').addClass('visible');
-								$('.smile-err-msg').html( error.Error || error.toString() );
+								$('.manual-err-msg').html( error.Error || error.toString() );
 							}
-					})	//end of validate / pairing procedure
+					});	//end of validate / pairing procedure
 			} else {
 				$('.smile-err').addClass('visible');
-				$('.smile-err-msg').html( __('pair.msg_invalidData') );
+				$('.manual-err-msg').html( __('pair.msg_invalidData') );
 			}
 		});
-	})
 
-	$(function(){
 		$('#save').click(function() {
 
 			if (devices && devices.length > 0) {
-				 $('#save').prop('disabled', true);
+				$('#save').prop('disabled', true);
 
-				 var errorWhileAdding = false;
-				 var count = 0;
-				
 				devices.forEach(addDeviceToHomey);
-				Homey.done();
-				/*
-				for (var device in devices) {
-					console.log('Device to check', device);
-					Homey.emit('checkForKnownDevices', device , function( error, exists ) {
-						if (error) {
-							errorWhileAdding = true;
-							Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": error}));
-						} else if (!exists) {
-							addDeviceToHomey(device);
-							count++;
-						} else if (exists) {
-							console.log('Device already in Homey ', device.id);
-						}
-					});
-				}
 
-				if (!errorWhileAdding) {
-					Homey.alert( __('pair.msg_addedDevices', { "devices": count }) );
+				setTimeout(function() {
 					Homey.done();
-				} else {
-					$('.smile-err-msg').html( __('pair.msg_wasErrorWhileAdding') );
+				}, 3000);
 
-					// TODO find a nicer solution with a appearing done button.
-
-					var timeout = setTimeout(function() {
-						Homey.done();
-					}, 5000);
-				}
-				*/ 	
 			} else {
-				$('.smile-err-msg').html( __('pair.msg_noDevices') );
+				$('.manual-err-msg').html( __('pair.msg_noDevices') );
 				$('#save').prop('disabled', false);
+			}
+
+			function getExtraDeviceData(device, callback) {
+				Homey.emit('get_extraData', device, function( error, extraDeviceData ) {
+					if (!error) {
+						console.log('extra device data', extraDeviceData);
+						callback(false, extraDeviceData);
+					} else callback(true, null);
+				})
 			}
 
 			function addDeviceToHomey(device) {
@@ -161,39 +165,49 @@
 				// Initial support for http and https, currently not available in user UI
 				var protocol = "http://";
 
-				var device_data_init = {
-					id		: device.data.id,
-				};
-				var settings_init = {
-					id			: device.data.id,
-					homey_name	: device.name,
-					player_name	: device.name,
-					protocol	: protocol,
-					server		: address,
-					port		: port,
-					mac			: device.data.id
-				};
+				getExtraDeviceData({
+					id: device.data.id,
+					protocol: protocol,
+					address: address,
+					port: port
+				}, function (error, extraDeviceData) {
+					if(!error) {
+						var device_data_init = {
+							id		: device.data.id
+						};
+						var settings_init = {
+							id						: device.data.id,
+							homey_name				: device.name,
+							player_name				: device.name,
+							online					: true,
+							protocol				: protocol,
+							server					: address,
+							port					: port,
+							mac						: device.data.id,
+							player_ip				: extraDeviceData.player_ip,
+							signalstrength			: extraDeviceData.signalstrength,
+							remote					: extraDeviceData.remote,
+							digital_volume_control	: extraDeviceData.digital_volume_control
+						};
 
-				console.log('init settings', settings_init);
-
-				Homey.addDevice({
-					data	: device_data_init,
-					name	: device.name,
-					settings: settings_init
-					}, function( err, result ){
-						if( err ) {
-							console.log('Add device error: ', err);
-							var errorMsg = err.message || err.toString();
-							return Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": errorMsg}));
-						}
-					});		// end of addDevice
+						Homey.addDevice({
+							data	: device_data_init,
+							name	: device.name,
+							settings: settings_init
+						}, function( err, result ){
+							if( err ) {
+								console.log('Add device error: ', err);
+								var errorMsg = err.message || err.toString();
+								return Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": errorMsg}));
+							}
+						});		// end of addDevice
+					} else {
+						Homey.alert(__('pair.msg_errorAddingDevice', {"errorMsg": error}));
+						console.log('Fetching extra device data failed!');
+					}
+				});
 			}
 		});
-	})
 
-	$(function(){
-		$('#done').click(function() {
-			Homey.done();
-		})
-	})
+	});
 </script>

@@ -40,11 +40,14 @@ If you need any assistance then please feel free to drop me a message on Slack (
 
 ##To do
 * Better error detection all around the driver
+* Better connection management to the server (is initiated again every time info is requested) 
 * HTTPS support
 * Support for authentication
-* Add device card with basic controls (start/pause, volume, currently playing) per Squeezebox
+* Enhance mobile card with basic controls:
+    * start/pause - Currently as a picker. I a feature Homey firmware update support for multi state icons is added
+    * currently playing - Not supported by current Homey firmware (0.9.3) because there is no mobile card item with a string
 * Detect if a Squeezebox is already added while adding new devices
-* Create a list of devices in the pairing wizard rather than adding all Squeezeboxes on that server
+* Create a list of devices in the pairing wizard rather than adding all Squeezeboxes on that server to Homey
 
 ## Known bugs
 * While searching for a playlist, auto complete isn't working as expected

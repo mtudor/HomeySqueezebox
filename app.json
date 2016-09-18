@@ -27,7 +27,8 @@
         "small": "./assets/images/small.jpg"
     },
     "dependencies": {
-        "squeezenode": "*"
+        "squeezenode": "*",
+        "node_ssdp": "*"
     },
     "capabilities": {
         "play_stop": {
@@ -52,13 +53,63 @@
             "getable": true,
             "setable": true
         },
-        "metadata": {
-            "type": "string",
-            "title": {
-                "en": "Metadata"
+
+        "sq_shuffle": {
+          "type": "enum",
+          "title": {
+            "en": "Shuffle"
+          },
+          "values": [
+            {
+              "id": "sq_shuffle_off",
+              "title": {
+                "en": "Shuffle off"
+              }
             },
-            "getable": true,
-            "setable": false
+            {
+              "id": "sq_shuffle_song",
+              "title": {
+                "en": "Shuffle song"
+              }
+            },
+            {
+              "id": "sq_shuffle_albums",
+              "title": {
+                "en": "Shuffle albums"
+              }
+            }
+          ],
+          "getable": true,
+          "setable": true
+        },
+
+        "sq_repeat": {
+          "type": "enum",
+          "title": {
+            "en": "Repeat"
+          },
+          "values": [
+            {
+              "id": "sq_repeat_off",
+              "title": {
+                "en": "Repeat off"
+              }
+            },
+            {
+              "id": "sq_repeat_song",
+              "title": {
+                "en": "Repeat song"
+              }
+            },
+            {
+              "id": "sq_repeat_playlist",
+              "title": {
+                "en": "Repeat playlist"
+              }
+            }
+          ],
+          "getable": true,
+          "setable": true
         }
     },
     "drivers": [
@@ -76,7 +127,8 @@
                 "onoff",
                 "play_stop",
                 "volume_set",
-                "metadata"
+                "sq_repeat",
+                "sq_shuffle"
             ],
             "pair": [
                 {
@@ -86,17 +138,25 @@
             "mobile": {
                 "components": [
                     {
-                        "id":"icon",
-                        "capabilities":["onoff"]
+                      "id":"icon",
+                      "capabilities":["onoff"]
                     },
                     {
-                        "id":"picker",
-                        "capabilities":["play_stop"]
+                      "id":"picker",
+                      "capabilities":["play_stop"]
                     },
                     {
-                        "id":"slider",
-                        "capabilities":["volume_set"]
-					}
+                      "id":"slider",
+                      "capabilities":["volume_set"]
+					},
+                    {
+                      "id":"picker",
+                      "capabilities":["sq_shuffle"]
+                    },
+                    {
+                      "id":"picker",
+                      "capabilities":["sq_repeat"]
+                    }
                 ]
             }
         }

@@ -3,10 +3,12 @@ Control your Logitech Squeezebox server and devices with your Athom Homey!
 
 ##Getting Started
 
-###Configure the App
-Install the app and then add the correct server address and port in `Settings > Squeezebox`. Usually, leaving the
-Server Port at the default 9000 is fine. The Server Address should be specified as the address of the Logitech Media
-Server, including the "http://" part.  A name or ip address can be used:
+###Add your Squeezeboxes
+As with all devices in Homey, you should add your Squeezeboxes on the **Zones and Devices** page. Just click the **+** in the
+appropriate room and choose *Squeezebox* from the device type window. 
+Usually, leaving the Server Port at the default port (9000) is fine. 
+The Server Address should be specified as the address of the Logitech Media Server: 
+A name or IP address can be used
 
 ```
 Server Address: http://squeezebox.mydomain.co.uk
@@ -14,13 +16,7 @@ Server Address: http://squeezebox
 Server Address: http://192.168.0.1
 ```
 
-**WARNING**: If you do not specify a server address, the app will always fail when searching for Squeezeboxes with the
-message "There were no new devices found!". If you specify the wrong server address, or if the server is not reachable,
-the app will search for new Squeezeboxes forever, finding nothing!
-
-###Add your Squeezeboxes
-As with all devices in Homey, you should add your Squeezeboxes on the **Zones and Devices** page. Just click the **+** in the
-appropriate room and choose *Squeezebox* from the device type window. You can then pick any of the Squeezeboxes that are
+You can then pick any of the Squeezeboxes that are
 registered with your Logitech Media Server.
 
 ##App Status
@@ -39,5 +35,20 @@ until we're out of alpha. Bad ratings now probably won't help when the app does 
 said that, hopefully you won't find anything to rate badly as what's there should work reasonably well.
 
 ##Help
-If you need any assistance then please feel free to drop me a message on Slack (in the athom community) or via Twitter
+If you need any assistance then please feel free to drop me a message on Slack (in the Athom community) or via Twitter
 @marktudor. I'll be happy to help!
+
+##To do
+* Better error detection all around the driver
+* Better connection management to the server (is initiated again every time info is requested) 
+* HTTPS support
+* Support for authentication
+* Enhance mobile card with basic controls:
+    * start/pause - Currently as a picker. I a feature Homey firmware update support for multi state icons is added
+    * currently playing - Not supported by current Homey firmware (0.9.3) because there is no mobile card item with a string
+* Detect if a Squeezebox is already added while adding new devices
+* Create a list of devices in the pairing wizard rather than adding all Squeezeboxes on that server to Homey
+
+## Known bugs
+* While searching for a playlist, auto complete isn't working as expected
+* Error message while adding devices for the second time (because Homey already knows some)

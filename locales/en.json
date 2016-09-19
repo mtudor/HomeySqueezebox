@@ -1,1 +1,29 @@
-{}
+{
+    "pair": {
+        "title": "Search for Squeezbox server",
+        "title_desc": "Homey will try to find your SqueezeBox servers (Logitech Media Servers) automatically",
+        "title_manual": "Manually enter details for Squeezbox server",
+        "title_manual_desc": "Enter your server addres (IP or hostname) and port to get currently known players on that server",
+        "placeholder_address": "Address (IP or hostname)",
+        "placeholder_port": "Server port (9000)",
+        "button_get": "Get players",
+        "button_search" : "Search",
+        "button_save": "Save",
+        "msg_invalidData": "Server address and/or port field empty.",
+        "msg_invalidAddressData": "Invalid server ip/name or port",
+        "msg_noDevices": "Unable to save, no players haven been found. Please correct the settings and test again.",
+        "msg_foundPlayers": "Found __devices__ player(s)",
+        "msg_addedDevices": "Successfully added __devices__ Squeezebox player(s) to Homey",
+        "msg_errorAddingDevice": "Error while adding new Squeebox player(s) to Homey: __errorMsg__",
+        "msg_wasErrorWhileAdding": "While adding one of the devices, an error occurred. Please check the devices list."
+      },
+
+      "app": {
+          "msg_playlistNotFoundOnServer": "No playlist with name \"__playlistName__\" found on server \"__serverName__\"",
+          "msg_noMetadataAvailable": "No meta data available",
+          "msg_deviceOffline": "Device is offline",
+          "msg_unableGetStatus": "Unable to get the status of the device",
+          "metadata_title": "title",
+          "metadata_artist": "artist"
+      }
+}

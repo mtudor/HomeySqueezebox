@@ -6,20 +6,111 @@
     "description": {
         "en": "Allows control of Squeezeboxes connected to a Logitech Media Server."
     },
+    "version": "0.0.2",
+    "compatibility": ">=0.9.2",
+    "permissions": [],
     "author": {
         "name": "Mark Tudor",
         "email": "code@icefusion.co.uk"
+    },
+    "contributors": {
+        "developers": [
+            {
+                "name": "Robin van Kekem",
+                "email": "roady1979@gmail.com"
+            }
+        ]
     },
     "category": "music",
     "images": {
         "large": "./assets/images/large.jpg",
         "small": "./assets/images/small.jpg"
     },
-    "version": "0.0.1",
-    "compatibility": ">=0.9.2",
-    "permissions": [],
     "dependencies": {
-        "squeezenode": "*"
+        "squeezenode": "*",
+        "node_ssdp": "*"
+    },
+    "capabilities": {
+        "play_stop": {
+            "type": "enum",
+            "title": {
+                "en": "Play and stop"
+            },
+            "values": [
+                {
+                    "id": "sq_play",
+                    "title": {
+                        "en": "Play"
+                    }
+                },
+                {
+                    "id": "sq_stop",
+                    "title": {
+                        "en": "Stop"
+                    }
+                }
+            ],
+            "getable": true,
+            "setable": true
+        },
+
+        "sq_shuffle": {
+          "type": "enum",
+          "title": {
+            "en": "Shuffle"
+          },
+          "values": [
+            {
+              "id": "sq_shuffle_off",
+              "title": {
+                "en": "Shuffle off"
+              }
+            },
+            {
+              "id": "sq_shuffle_song",
+              "title": {
+                "en": "Shuffle song"
+              }
+            },
+            {
+              "id": "sq_shuffle_albums",
+              "title": {
+                "en": "Shuffle albums"
+              }
+            }
+          ],
+          "getable": true,
+          "setable": true
+        },
+
+        "sq_repeat": {
+          "type": "enum",
+          "title": {
+            "en": "Repeat"
+          },
+          "values": [
+            {
+              "id": "sq_repeat_off",
+              "title": {
+                "en": "Repeat off"
+              }
+            },
+            {
+              "id": "sq_repeat_song",
+              "title": {
+                "en": "Repeat song"
+              }
+            },
+            {
+              "id": "sq_repeat_playlist",
+              "title": {
+                "en": "Repeat playlist"
+              }
+            }
+          ],
+          "getable": true,
+          "setable": true
+        }
     },
     "drivers": [
         {
@@ -34,27 +125,72 @@
             "class": "other",
             "capabilities": [
                 "onoff",
-                "volume_set"
+                "play_stop",
+                "volume_set",
+                "sq_repeat",
+                "sq_shuffle"
             ],
             "pair": [
                 {
-                    "id": "list_my_devices",
-                    "template": "list_devices",
-                    "navigation": {
-                        "next": "add_my_devices"
-                    }
-                },
-                {
-                    "id": "add_my_devices",
-                    "template": "add_devices"
+                    "id": "start"
                 }
-            ]
+            ],
+            "mobile": {
+                "components": [
+                    {
+                      "id":"icon",
+                      "capabilities":["onoff"]
+                    },
+                    {
+                      "id":"picker",
+                      "capabilities":["play_stop"]
+                    },
+                    {
+                      "id":"slider",
+                      "capabilities":["volume_set"]
+					},
+                    {
+                      "id":"picker",
+                      "capabilities":["sq_shuffle"]
+                    },
+                    {
+                      "id":"picker",
+                      "capabilities":["sq_repeat"]
+                    }
+                ]
+            }
         }
     ],
     "flow": {
         "triggers": [
         ],
         "actions": [
+            {
+                "id": "off",
+                "title": {
+                    "en": "Power off"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
+            {
+                "id": "on",
+                "title": {
+                    "en": "Power on"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
             {
                 "id": "volume",
                 "title": {
@@ -74,10 +210,7 @@
                         "min": 0,
                         "max": 100,
                         "step": 1,
-                        "label": "%",
-                        "placeholder": {
-                            "en": "0 - 100%"
-                        }
+                        "label": "%"
                     }
                 ]
             },
@@ -90,9 +223,6 @@
                     {
                         "name": "device",
                         "type": "device",
-                        "placeholder": {
-                            "en": "Which Squeezebox?"
-                        },
                         "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
                     }
                 ]
@@ -106,16 +236,10 @@
                     {
                         "name": "device",
                         "type": "device",
-                        "placeholder": {
-                            "en": "Which Squeezebox?"
-                        },
                         "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
                     }, {
                         "name": "playlist",
-                        "type": "autocomplete",
-                        "placeholder": {
-                            "en": "Which playlist?"
-                        }
+                        "type": "autocomplete"
                     }
                 ]
             },
@@ -128,11 +252,55 @@
                     {
                         "name": "device",
                         "type": "device",
-                        "placeholder": {
-                            "en": "Which Squeezebox?"
-                        },
                         "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
                     }
+                ]
+            },
+            {
+                "id": "next",
+                "title": {
+                    "en": "Next song in playlist"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
+            {
+                "id": "previous",
+                "title": {
+                    "en": "Previous song in playlist"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    }
+                ]
+            },
+            {
+                "id": "seek",
+                "title": {
+                    "en": "Go to second in current song"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_uri=homey:app:uk.co.icefusion.squeezebox&driver_id=squeezebox"
+                    },
+                    {
+                        "name": "second",
+                        "type": "number",
+                        "placeholder" :
+                        {
+                            "en": "Second to jump to"
+                        }
+                  }
                 ]
             }
         ]

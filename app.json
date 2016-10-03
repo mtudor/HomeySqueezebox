@@ -15,7 +15,7 @@
         "large": "./assets/images/large.jpg",
         "small": "./assets/images/small.jpg"
     },
-    "version": "0.0.1",
+    "version": "0.1.0",
     "compatibility": ">=0.10.0",
     "permissions": [],
     "dependencies": {

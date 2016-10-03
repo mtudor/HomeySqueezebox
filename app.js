@@ -61,7 +61,7 @@ module.exports.init = function () {
         });
     });
 
-    Homey.manager('flow').on('action.playPlaylist.playlist.autocomplete', function (callback, args) {
+    Homey.manager('flow').on('action.playPlaylist.playlist.autocomplete', function (callback, data) {
         var SqueezeServer = require('squeezenode');
         var mySqueezeServer = new SqueezeServer(
             Homey.manager('settings').get('serverAddress'),
@@ -70,12 +70,12 @@ module.exports.init = function () {
 
         mySqueezeServer.on('register', function () {
             var searchParams = ["playlists", 0, 10];
-            if (args.query != '') {
-                searchParams.push('search:' + args.query);
+            if (data.query != '') {
+                searchParams.push('search:' + data.query);
             }
 
             mySqueezeServer.request(
-                args.device.id,
+                data.args.device.id,
                 searchParams,
                 function (reply) {
                     var playlists = [];

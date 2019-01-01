@@ -117,7 +117,9 @@ module.exports.init = function(devices_data, callback) {
 
     Homey.manager('flow').on('action.playPlaylist', function (callback, args) {
         Homey.log('flow action play playlist');
-        var device = devices[args.device.id];
+        Homey.log('args: ', args);
+        var id = args.device.id;
+        var device = devices[id];
 
         if (device.online == true) {
             var url = device.protocol + device.server;
@@ -156,7 +158,8 @@ module.exports.init = function(devices_data, callback) {
     });
 
     Homey.manager('flow').on('action.playPlaylist.playlist.autocomplete', function (callback, args) {
-        var device = devices[args.device.id];
+        var id = args.args.device.data.id
+        var device = devices[id];
         var url = device.protocol + device.server;
 
         var SqueezeServer = require('squeezenode');
@@ -169,7 +172,7 @@ module.exports.init = function(devices_data, callback) {
             }
 
             mySqueezeServer.request(
-                args.device.id,
+                id,
                 searchParams,
                 function (reply) {
                     var playlists = [];
@@ -193,7 +196,8 @@ module.exports.init = function(devices_data, callback) {
 
     Homey.manager('flow').on('action.next', function (callback, args) {
         Homey.log('flow action next');
-        var device = devices[args.device.id];
+        var id = args.device.id;
+        var device = devices[id];
         if (device.online == true) {
             var url = device.protocol + device.server;
 
@@ -202,7 +206,7 @@ module.exports.init = function(devices_data, callback) {
 
             mySqueezeServer.on('register', function () {
                 if (hasValue(mySqueezeServer.players[device.id])) {     // Squeezebox module doesn't report if device is offline but crashes
-                    mySqueezeServer.players[args.device.id].next(function (reply) {
+                    mySqueezeServer.players[id].next(function (reply) {
                         if (!reply.ok) callback(reply, null);
                         else callback(null, true);
                     });
@@ -220,7 +224,8 @@ module.exports.init = function(devices_data, callback) {
 
     Homey.manager('flow').on('action.previous', function (callback, args) {
         Homey.log('flow action previous');
-        var device = devices[args.device.id];
+        var id = args.device.id;
+        var device = devices[id];
 
         if (device.online == true) {
             var url = device.protocol + device.server;
@@ -230,7 +235,7 @@ module.exports.init = function(devices_data, callback) {
 
             mySqueezeServer.on('register', function () {
                 if (hasValue(mySqueezeServer.players[device.id])) {     // Squeezebox module doesn't report if device is offline but crashes
-                    mySqueezeServer.players[args.device.id].previous(function (reply) {
+                    mySqueezeServer.players[id].previous(function (reply) {
                         if (!reply.ok) callback(reply, false);
                         else callback(null, true);
                     });
@@ -248,7 +253,8 @@ module.exports.init = function(devices_data, callback) {
 
     Homey.manager('flow').on('action.seek', function (callback, args) {
         Homey.log('flow action seek');
-        var device = devices[args.device.id];
+        var id = args.device.id;
+        var device = devices[id];
 
         if (device.online == true) {
             var url = device.protocol + device.server;
@@ -258,7 +264,7 @@ module.exports.init = function(devices_data, callback) {
 
             mySqueezeServer.on('register', function () {
                 if (hasValue(mySqueezeServer.players[device.id])) {     // Squeezebox module doesn't report if device is offline but crashes
-                    mySqueezeServer.players[args.device.id].seek(args.second, function (reply) {
+                    mySqueezeServer.players[id].seek(args.second, function (reply) {
                         if (!reply.ok) callback(reply, false);
                         else callback(null, true);
                     });
@@ -330,6 +336,7 @@ module.exports.pair = function(socket) {
     socket.on('validate', function (server_data, callback) {
 
         validateConnection(server_data, function(error, result) {
+            Homey.log('result', result);
             if (!error) {
                 Homey.log('Connection to server successful');
                 callback(null, result);
@@ -343,6 +350,9 @@ module.exports.pair = function(socket) {
     socket.on('list_players', function (server_data, callback) {
 
         listPlayers(server_data, function(error, devices) {
+            
+            Homey.log(error);
+            Homey.log(devices);
 
             if (error == false || error == null) {
                 Homey.log('Successfully received servers players');

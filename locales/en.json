@@ -25,5 +25,6 @@
           "msg_unableGetStatus": "Unable to get the status of the device",
           "metadata_title": "title",
           "metadata_artist": "artist"
-      }
+      },
+      "loading": "Please wait while initializing device..."
 }

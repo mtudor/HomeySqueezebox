@@ -35,7 +35,7 @@
 	<span class="input-wrap">
 		<label for="address" data-i18n="pair.title_manual">Manual</label>
 		<input type="text" id="address" placeholder="Address (IP or hostname)" value="" />
-		<input type="text" id="port" placeholder="Server port (e.g. 9000)" value="9000" />
+		<input type="text" id="port" placeholder="Server port (e.g. 9002)" value="9002" />
 		<button class="button" id="validate" data-i18n="pair.button_get">Get players</button>
 		<i class="smile-status smile-loading fa fa-circle-o-notch fa-spin"></i>
 		<i class="smile-status smile-ok fa fa-check" style="color: #96ff00;"></i>
@@ -64,7 +64,7 @@
 	}
 
 	function searchPlayers(protocol, address, port, callback) {
-		
+
 		Homey.emit('validate', {
 					protocol: protocol,
 					address: address,
@@ -78,7 +78,7 @@
 								address: address,
 								port: port
 								}, function( error, devices ){
-									
+
 									if (!error) {
 										callback(null, devices);
 
@@ -222,7 +222,7 @@
 
 					console.log('Devices', devices);
 					console.log('Number of devices', devices.length);
-					
+
 					if (devices && devices.length > 0) {
 						$('#save').prop('disabled', true);
 
@@ -236,7 +236,7 @@
 						$('.manual-err-msg').html( __('pair.msg_noDevices') );
 						$('#save').prop('disabled', false);
 					}
-					
+
 				} else {
 					$('.smile-err').addClass('visible');
 					$('.manual-err-msg').html( errorText.toString() );

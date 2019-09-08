@@ -1,7 +1,14 @@
 "use strict";
 
-module.exports.init = function () {
+const Homey = require('homey');
+const util = require('/lib/util.js');
 
-    Homey.log('Squeezebox player for Homey started...');
+class SqueezeboxApp extends Homey.App {
+
+    onInit() {
+      this.log('Squeezebox player for Homey started...');
+    }
 
 };
+
+module.exports = SqueezeboxApp;

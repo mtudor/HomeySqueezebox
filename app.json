@@ -1,14 +1,17 @@
 {
-    "id": "uk.co.icefusion.squeezebox",
+    "id": "uk.co.icefusion.squeezebox2",
+    "version": "0.1.0",
+    "compatibility": ">=2.0.0",
+    "sdk": 2,
     "name": {
-        "en": "Squeezebox"
+        "en": "Squeezebox2"
     },
     "description": {
         "en": "Allows control of Squeezeboxes connected to a Logitech Media Server."
     },
-    "version": "0.0.2",
-    "compatibility": ">=0.9.2",
-    "permissions": [],
+    "tags": {
+      "en": ["squeezebox", "music", "logitech media server", "lms"]
+    },
     "author": {
         "name": "Mark Tudor",
         "email": "code@icefusion.co.uk"
@@ -30,88 +33,6 @@
         "squeezenode": "*",
         "node_ssdp": "*"
     },
-    "capabilities": {
-        "play_stop": {
-            "type": "enum",
-            "title": {
-                "en": "Play and stop"
-            },
-            "values": [
-                {
-                    "id": "sq_play",
-                    "title": {
-                        "en": "Play"
-                    }
-                },
-                {
-                    "id": "sq_stop",
-                    "title": {
-                        "en": "Stop"
-                    }
-                }
-            ],
-            "getable": true,
-            "setable": true
-        },
-
-        "sq_shuffle": {
-          "type": "enum",
-          "title": {
-            "en": "Shuffle"
-          },
-          "values": [
-            {
-              "id": "sq_shuffle_off",
-              "title": {
-                "en": "Shuffle off"
-              }
-            },
-            {
-              "id": "sq_shuffle_song",
-              "title": {
-                "en": "Shuffle song"
-              }
-            },
-            {
-              "id": "sq_shuffle_albums",
-              "title": {
-                "en": "Shuffle albums"
-              }
-            }
-          ],
-          "getable": true,
-          "setable": true
-        },
-
-        "sq_repeat": {
-          "type": "enum",
-          "title": {
-            "en": "Repeat"
-          },
-          "values": [
-            {
-              "id": "sq_repeat_off",
-              "title": {
-                "en": "Repeat off"
-              }
-            },
-            {
-              "id": "sq_repeat_song",
-              "title": {
-                "en": "Repeat song"
-              }
-            },
-            {
-              "id": "sq_repeat_playlist",
-              "title": {
-                "en": "Repeat playlist"
-              }
-            }
-          ],
-          "getable": true,
-          "setable": true
-        }
-    },
     "drivers": [
         {
             "id": "squeezebox",
@@ -122,43 +43,21 @@
                 "large": "./drivers/squeezebox/assets/images/large.jpg",
                 "small": "./drivers/squeezebox/assets/images/small.jpg"
             },
-            "class": "other",
+            "class": "speaker",
             "capabilities": [
-                "onoff",
-                "play_stop",
-                "volume_set",
-                "sq_repeat",
-                "sq_shuffle"
+              "onoff",
+              "speaker_playing",
+              "speaker_next",
+              "speaker_prev",
+              "speaker_repeat",
+              "speaker_shuffle",
+              "volume_set"
             ],
             "pair": [
                 {
                     "id": "start"
                 }
-            ],
-            "mobile": {
-                "components": [
-                    {
-                      "id":"icon",
-                      "capabilities":["onoff"]
-                    },
-                    {
-                      "id":"picker",
-                      "capabilities":["play_stop"]
-                    },
-                    {
-                      "id":"slider",
-                      "capabilities":["volume_set"]
-					},
-                    {
-                      "id":"picker",
-                      "capabilities":["sq_shuffle"]
-                    },
-                    {
-                      "id":"picker",
-                      "capabilities":["sq_repeat"]
-                    }
-                ]
-            }
+            ]
         }
     ],
     "flow": {

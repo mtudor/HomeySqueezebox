@@ -1,0 +1,49 @@
+/**
+     * get the tracks for a specific playlist
+     * @param playlistId {String} the playlist id to look up
+     * @param skip {Number} start at
+     * @param take {Number} take this many
+     * @return {Promise.<*>}
+     */
+    self.getPlaylistTracks = function (playlistId, addSongInfo, skip, take) {
+        return Promise.try(function () {
+            var s = _.isFinite(skip) && skip >= 0 ? skip : 0,
+                t = _.isFinite(take) && take >= 1 ? take : 100000,
+                isSongInfo = _.isBoolean(addSongInfo) ? addSongInfo : false,
+                params = ['playlists', 'tracks', s, t, 'tags:'],
+                noSongInfo = Promise.method(function (reply) {
+                    var response = {};
+                    if (reply && reply.result) {
+                        response.count = reply.result.count;
+                        response.title = reply.result.__playlistTitle;
+                        response.tracks = reply.result.playlisttracks_loop;
+                    }
+                    return response;
+                }),
+                withSongInfo = Promise.method(function (reply) {
+                    if (reply && reply.result) {
+                        return Promise.map(reply.result.playlisttracks_loop, function (track) {
+                            return self.songInfo(track.id);
+                        }).then(function (tracks) {
+                            var response = {};
+                            response.count = reply.result.count;
+                            response.title = reply.result.__playlistTitle;
+                            response.tracks = tracks;
+                            return response;
+                        });
+                    } else {
+                        return noSongInfo(reply);
+                    }
+                });
+
+            if (_.isNil(playlistId)) {
+                throw new TypeError('playlistId');
+            }
+            params.push('playlist_id:' + playlistId);
+
+
+            return self.request(self.defaultPlayer, params).then(function (reply) {
+                return (isSongInfo) ? withSongInfo(reply) : noSongInfo(reply);
+            });
+        });
+    };

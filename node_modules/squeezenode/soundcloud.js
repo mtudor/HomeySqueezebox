@@ -22,11 +22,12 @@
  SOFTWARE.
  */
 
-var inherits = require('super');
-var SqueezeApp = require('./squeezeapp');
+var inherits = require('super'),
+    SqueezeApp = require('./squeezeapp');
 
 function SoundCloud(name, cmd, address, port) {
-    SoundCloud.super_.apply(this, arguments);
+    var self = this;
+    SoundCloud.super_.apply(self, arguments);
 }
 
 inherits(SoundCloud, SqueezeApp);

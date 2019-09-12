@@ -2,104 +2,57 @@
 
 const Homey = require('homey');
 const SqueezeServer = require('squeezenode');
+const fetch = require('node-fetch');
 const util = require('/lib/util.js');
 
 class SqueezeboxDevice extends Homey.Device {
 
   onInit() {
 
+    this._albumArt_url = '';
+
     this.log('Device init');
     this.log('Name:', this.getName());
 
     this.setUnavailable(Homey.__('loading'));
 
-    var interval = this.getSetting('polling') || 4;
+    var interval = this.getSetting('polling') || 60;
     this._pollDevice(interval);
 
     const settings = this.getSettings();
-    this.log(settings);
 
     this.registerCapabilityListener('speaker_playing', (value, opts) => {
 
-      const protocol = this.getSettings().protocol;
-      const server = this.getSettings().server;
-      const port = this.getSettings().port;
-      const url = protocol + server;
-      const id = this.getSettings().id;
+      var pause = (value) ? 0 : 1;
 
-      const mySqueezeServer = new SqueezeServer(url, port);
-
-      if (value) {
-        // Set device to play
-        this.log('set device ' + id + ' to play');
-        mySqueezeServer.on('register', function () {
-          //console.log(mySqueezeServer.players[id]);
-          if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
-              mySqueezeServer.players[id].play(function (reply) {
-                if (reply.ok) return Promise.resolve();
-                else return Promise.reject('Failed to send command');
-              });
-          } else {
-              console.setUnavailable('Device unavailable');
-              console.log("Unable to get the status for device ", id);
-              return Promise.reject('Device not available on server anymore');
-          }
-        });
-        return Promise.resolve();
-
-      } else {
-        // Set device to Pause
-        this.log('set device ' + id + ' to pause');
-        mySqueezeServer.on('register', function () {
-          mySqueezeServer.players[id];
-            if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
-                mySqueezeServer.players[id].pause(function (reply) {
-                    if (!reply.ok) return Promise.reject('Failed to send command');
-                    else return Promise.resolve();
-                });
-            } else {
-                this.setUnavailable('Device unavailable');
-                console.log("Unable to get the status for device", id);
-                return Promise.reject('Device not available on server anymore');
-            }
-        });
-        return Promise.resolve();
-      }
-    });
-
-    this.registerCapabilityListener('speaker_prev', (value, opts) => {
-
-      this.log('registerCapabilityListener speaker_prev called');
-      this.log('value: ', value);
-      this.log('opts', opts);
+      this.log('registerCapabilityListener speaker_playing to ' + value + '(' + pause + ')');
 
       const protocol = this.getSettings().protocol;
       const server = this.getSettings().server;
       const port = this.getSettings().port;
       const url = protocol + server;
       const id = this.getSettings().id;
-
       const mySqueezeServer = new SqueezeServer(url, port);
 
-      mySqueezeServer.on('register', function () {
-          if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
-              mySqueezeServer.players[id].previous(function (reply) {
-                  if (!reply.ok) return Promise.reject('Failed to send command');
-                  else return Promise.resolve();
-              });
-          } else {
-              this.setUnavailable('Device unavailable');
-              this.log("Unable to get the status for device", id);
-               return Promise.reject('Device not available on server anymore');
-          }
-      });
-
+      mySqueezeServer.register()
+        .then(() => {
+          mySqueezeServer.players[id].pause(pause);
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
       return Promise.resolve();
     });
 
     this.registerCapabilityListener('volume_set', (value, opts) => {
 
-      const volume = opts.volume;
+      this.log('registerCapabilityListener volume_set to ' + value);
+
+      const volume = value;
       if (volume < 0 || volume > 1) volume = 0.5;
 
       const protocol = this.getSettings().protocol;
@@ -109,24 +62,50 @@ class SqueezeboxDevice extends Homey.Device {
       const id = this.getSettings().id;
       const mySqueezeServer = new SqueezeServer(url, port);
 
-      mySqueezeServer.on('register', function () {
-          if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
-              mySqueezeServer.players[id].setVolume(value * 100);
-              return Promise.resolve();;
-            } else {
-                this.setUnavailable('Device unavailable');
-                this.log("Unable to get the status for device", id);
-                return Promise.reject('Device not available on server anymore');
-            }
-      });
-
+      mySqueezeServer.register()
+        .then(() => {
+          mySqueezeServer.players[id].volume(volume * 100);
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
       return Promise.resolve();
     });
 
-    this.registerCapabilityListener('speaker_next', (value, opts) => {
-      this.log('registerCapabilityListener speakerpnext called');
-      this.log('value: ', value);
-      this.log('opts', opts);
+    this.registerCapabilityListener('volume_mute', (value, opts) => {
+
+      this.log('registerCapabilityListener volume_mute to ' + value);
+
+      var mute = (value) ? 1 : 0;
+
+      const protocol = this.getSettings().protocol;
+      const server = this.getSettings().server;
+      const port = this.getSettings().port;
+      const url = protocol + server;
+      const id = this.getSettings().id;
+      const mySqueezeServer = new SqueezeServer(url, port);
+
+      mySqueezeServer.register()
+        .then(() => {
+          mySqueezeServer.players[id].mute(mute);
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
+      return Promise.resolve();
+    });
+
+    this.registerCapabilityListener('speaker_prev', (value, opts) => {
+
+      this.log('registerCapabilityListener speaker_prev called');
 
       const protocol = this.getSettings().protocol;
       const server = this.getSettings().server;
@@ -136,65 +115,212 @@ class SqueezeboxDevice extends Homey.Device {
 
       const mySqueezeServer = new SqueezeServer(url, port);
 
-      mySqueezeServer.on('register', function () {
-          if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
-              mySqueezeServer.players[id].next(function (reply) {
-                  if (!reply.ok) return Promise.reject('Failed to send command');
-                  else return Promise.resolve();
-              });
-          } else {
-              this.setUnavailable('Device unavailable');
-              this.log("Unable to get the status for device", id);
-               return Promise.reject('Device not available on server anymore');
-          }
-      });
+      mySqueezeServer.register()
+        .then(() => {
+          mySqueezeServer.players[id].previous();
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
+      //return Promise.resolve();
+    });
 
+    this.registerCapabilityListener('speaker_next', (value, opts) => {
+      this.log('registerCapabilityListener speaker_next called');
+
+      const protocol = this.getSettings().protocol;
+      const server = this.getSettings().server;
+      const port = this.getSettings().port;
+      const url = protocol + server;
+      const id = this.getSettings().id;
+
+      const mySqueezeServer = new SqueezeServer(url, port);
+
+      mySqueezeServer.register()
+        .then(() => {
+          mySqueezeServer.players[id].next();
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
+      return Promise.resolve();
+    });
+
+    this.registerCapabilityListener('speaker_shuffle', (value, opts) => {
+      this.log('registerCapabilityListener speaker_shuffle called');
+
+      const protocol = this.getSettings().protocol;
+      const server = this.getSettings().server;
+      const port = this.getSettings().port;
+      const url = protocol + server;
+      const id = this.getSettings().id;
+
+      const mySqueezeServer = new SqueezeServer(url, port);
+
+      mySqueezeServer.register()
+        .then(() => {
+          if (value) mySqueezeServer.players[id].mode('SHUFFLE', 1)
+            .then(() => {
+              console.log('then called inside shuffle');
+            })
+            .catch((e) => {
+              console.log('Error while sending shuffle command', e);
+            });
+          else mySqueezeServer.players[id].mode('SHUFFLE', 0);
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
+      return Promise.resolve();
+    });
+
+    this.registerCapabilityListener('speaker_repeat', (value, opts) => {
+      this.log('registerCapabilityListener speaker_repeat called');
+
+      const protocol = this.getSettings().protocol;
+      const server = this.getSettings().server;
+      const port = this.getSettings().port;
+      const url = protocol + server;
+      const id = this.getSettings().id;
+
+      const mySqueezeServer = new SqueezeServer(url, port);
+
+      mySqueezeServer.register()
+        .then(() => {
+          if (value) mySqueezeServer.players[id].mode('REPEAT', 1)
+            .then(() => {
+              console.log('then called inside repeat');
+            })
+            .catch((e) => {
+              console.log('Error while sending repeat command', e);
+            });
+          else mySqueezeServer.players[id].mode('REPEAT', 0);
+          this._getDeviceData();
+          return Promise.resolve();
+        })
+        .catch(e => {
+            this.log(e);
+            this.setUnavailable(Homey.__('Unreachable'));
+            return Promise.reject(Homey.__('Unreachable'));
+        });
       return Promise.resolve();
     });
 
     this._getDeviceData();
-    this.log('Setting device as available');
-    this.setAvailable();
+  }
 
+  onDeleted() {
+    clearInterval(this.pollingInterval);
   }
 
   _getDeviceData() {
+
     const protocol = this.getSettings().protocol;
     const server = this.getSettings().server;
     const port = this.getSettings().port;
     const url = protocol + server;
     const id = this.getSettings().id;
-
     const mySqueezeServer = new SqueezeServer(url, port);
 
-    mySqueezeServer.on('register', function () {
-      if (util.hasValue(mySqueezeServer.players[id])) {     // Squeezebox module doesn't report if device is offline but crashes
+    const capabilities = this.getCapabilities();
 
-        mySqueezeServer.players[id].getStatus(function (reply) {
-            if (reply.ok) {
-              console.log(reply.result.mode);
-              this.setCapabilityValue('speaker_playing', true);
-            } else return null;
-        });
+    mySqueezeServer.register()
+      .then(() => {
 
-        mySqueezeServer.players[id].getCurrentTitle(function (reply) {
-            if (reply.ok) {
-              console.log(reply.result);
-            } else return null;
-        });
+        var player = mySqueezeServer.players[id];
 
-        mySqueezeServer.players[id].getArtist(function (reply) {
-            if (reply.ok) {
-              console.log(reply.result);
-            } else return null;
-        });
+        player.status()
+          .then(reply => {
 
-      } else {
-          console.setUnavailable('Device unavailable');
-          console.log("Unable to get the status for device ", id);
-          return null;
-      }
-    });
+            //this.log(reply);
+
+            if (!this.getAvailable()) this.setAvailable();
+
+            if (capabilities.indexOf('speaker_playing') >= 0) {
+              if (reply.mode == 'play') this.setCapabilityValue('speaker_playing', true);
+              else this.setCapabilityValue('speaker_playing', false);
+            };
+
+            if (capabilities.indexOf('volume_set') >= 0) {
+              var volume = reply['mixer volume'];
+              volume = volume / 100;
+              this.setCapabilityValue('volume_set', volume);
+            }
+            if (capabilities.indexOf('volume_mute') >= 0) {
+              var volume = reply['mixer volume'];
+              if (volume < 1) this.setCapabilityValue('volume_mute', true);
+              else this.setCapabilityValue('volume_mute', false);
+            }
+
+            if (capabilities.indexOf('speaker_repeat') >= 0) {
+              var repeat = reply['playlist repeat'];
+              if (repeat == 0 ) this.setCapabilityValue('speaker_repeat', 'none');
+              else if (repeat == 1 ) this.setCapabilityValue('speaker_repeat', 'track');
+              else if (repeat == 2 ) this.setCapabilityValue('speaker_repeat', 'playlist');
+            }
+
+            if (capabilities.indexOf('speaker_shuffle') >= 0) {
+              var shuffle = reply['playlist shuffle'];
+              if (shuffle == 0 ) this.setCapabilityValue('speaker_shuffle', false);
+              else this.setCapabilityValue('speaker_shuffle', true);
+            }
+
+            if (capabilities.indexOf('speaker_track') >= 0) {
+              if (util.hasValue(reply.playlist_loop[0].title)) this.setCapabilityValue('speaker_track', reply.playlist_loop[0].title);
+              else  this.setCapabilityValue('speaker_track', '');
+            };
+
+            if (capabilities.indexOf('speaker_artist') >= 0) {
+              if (util.hasValue(reply.playlist_loop[0].artist)) this.setCapabilityValue('speaker_artist', reply.playlist_loop[0].artist);
+              else this.setCapabilityValue('speaker_artist', '');
+            };
+
+            if (capabilities.indexOf('speaker_album') >= 0) {
+              if (util.hasValue(reply.playlist_loop[0].album)) this.setCapabilityValue('speaker_album', reply.playlist_loop[0].album);
+              else this.setCapabilityValue('speaker_album', '');
+            };
+
+            /**
+            var img_url = url + ':' + port + '/music/' + reply.playlist_loop[0].artwork_track_id + '/cover.jpg';
+            //http://192.168.0.52:9002/music/1b664158/cover.jpg
+
+            const _albumArt = new Homey.Image();
+            _albumArt.setStream(async (stream) => {
+              const res = await fetch(img_url);
+              if(!res.ok)
+                throw new Error('Invalid Response');
+
+              return res.body.pipe(stream);
+            });
+            _albumArt.register().catch(console.error);
+            this.setAlbumArtImage(this._albumArt);
+            **/
+
+          })
+          .catch((e) => {
+            this.log(e);
+            this.setUnavailable('Device not available on server');
+            return Promise.Reject('Device unavailable on server');
+          });
+
+      })
+      .catch((e) => {
+        this.log(e);
+        this.setUnavailable('Device not available on server');
+        return Promise.Reject('Device not available on server');
+      });
   }
 
   _pollDevice(interval){
@@ -203,8 +329,8 @@ class SqueezeboxDevice extends Homey.Device {
     clearInterval(this.pingInterval);
 
     this.pollingInterval = setInterval(() => {
-      console.log('Polling device');
-      //_getDeviceData();
+      this.log('Fetching data for device ' + this.getSettings().id);
+      this._getDeviceData();
     }, 1000 * interval);
   }
 

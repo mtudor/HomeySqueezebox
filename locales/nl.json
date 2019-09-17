@@ -1,0 +1,28 @@
+{
+  "pair": {
+    "title": "Zoek naar Squeezebox server",
+    "title_desc": "Homey zal proberen om automatisch Squeezebox servers (Logitech Media Servers) te finden",
+    "title_manual": "Voer handmatig de gegevens in voor de Squeezebox server",
+    "title_manual_desc": "Geef het server adres (IP of hostnaam) en poort om de spelers op de server te vinden",
+    "placeholder_address": "Adres (IP of hostnaam)",
+    "placeholder_port": "Server poort (9000)",
+    "button_get": "Zoek spelers",
+    "button_search" : "Zoek",
+    "button_save": "Bewaar",
+    "msg_invalidData": "Server adres en/of poort veld is leeg.",
+    "msg_invalidAddressData": "Ongeldige server IP/naam of poort",
+    "msg_noDevices": "Kan net opslaan er geen speler gevonden. Corrigeer de instellingen en test opnieuw",
+    "msg_foundPlayers": "__devices__ speler(s) gevonden",
+    "msg_addedDevices": "__devices__ Squeezebox spelers(s) toegevoegt aan Homey",
+    "msg_errorAddingDevice": "Fout bij het toevoegen van spelers: __errorMsg__",
+    "msg_wasErrorWhileAdding": "Fout tijdens het toevoegen van een van de spelers. Controleer de spelers lijst."
+  },
+
+  "app": {
+    "loading": "Moment gedult terwijl het apparaat geïnitialiseerd wordt...",
+    "msg_deviceOffline": "Apparaat is niet bereikbaar. Fout: __errorMsg__",
+    "msg_noPlaylistsOnServer": "Er zijn geen afspeellijsten op de server",
+    "msg_unableToPlayPlaylist": "Kan afspeellijsten niet afspelen"
+  },
+  "Unreachable": "Unable to connect to device"
+}

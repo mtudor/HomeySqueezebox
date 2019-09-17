@@ -1,37 +1,39 @@
 {
     "id": "uk.co.icefusion.squeezebox2",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "compatibility": ">=2.2.0",
+    "category": "music",
     "sdk": 2,
     "name": {
-        "en": "Squeezebox2"
+      "en": "Squeezebox2"
     },
     "description": {
-        "en": "Allows control of Squeezeboxes connected to a Logitech Media Server (LMS)."
+      "en": "Allows control of Squeezeboxes connected to a Logitech Media Server (LMS).",
+      "nl": "App om de Squeezeboxen gekoppeld aan een Logitech Media Server (LMS) te besturen."
     },
     "tags": {
       "en": ["squeezebox", "music", "logitech media server", "lms", "speaker"]
     },
     "author": {
-        "name": "Mark Tudor",
-        "email": "code@icefusion.co.uk"
+      "name": "Robin van Kekem",
+      "email": "nl.inversion@gmail.com"
     },
     "contributors": {
-        "developers": [
-            {
-                "name": "Robin van Kekem",
-                "email": "nl.inversion@gmail.com"
-            }
-        ]
+      "developers": [
+        {
+          "name": "Mark Tudor",
+          "email": "code@icefusion.co.uk"
+        }
+      ]
     },
-    "category": "music",
     "images": {
-        "large": "./assets/images/large.jpg",
-        "small": "./assets/images/small.jpg"
+      "large": "./assets/images/large.jpg",
+      "small": "./assets/images/small.jpg"
     },
     "dependencies": {
-        "squeezenode": "*",
-        "node-fetch": "*"
+      "squeezenode": "*",
+      "node-fetch": "*",
+      "moment": "*"
     },
     "drivers": [
         {
@@ -66,27 +68,27 @@
         }
     ],
     "flow": {
-        "actions": [
-            {
-                "id": "playPlaylist",
-                "title": {
-                    "en": "Play Playlist"
-                },
-                "hint": {
-                    "en": "Select the playlist you'd like to play"
-                },
-                "args": [
-                    {
-                        "name": "device",
-                        "type": "device",
-                        "filter": "driver_id=squeezebox"
-                    },
-                    {
-                        "name": "playlist",
-                        "type": "autocomplete"
-                    }
-                ]
-            }
-        ]
+      "actions": [
+        {
+          "id": "playPlaylist",
+          "title": {
+              "en": "Play Playlist"
+          },
+          "hint": {
+              "en": "Select the playlist you'd like to play"
+          },
+          "args": [
+              {
+                  "name": "device",
+                  "type": "device",
+                  "filter": "driver_id=squeezebox"
+              },
+              {
+                  "name": "playlist",
+                  "type": "autocomplete"
+              }
+          ]
+        }
+      ]
     }
 }

@@ -14,7 +14,7 @@ class SqueezeboxDevice extends Homey.Device {
     this.log('Device init');
     this.log('Name:', this.getName());
 
-    this.setUnavailable(Homey.__('loading'));
+    this.setUnavailable(Homey.__('app.loading'));
 
     var interval = this.getSetting('polling') || 60;
     this._pollDevice(interval);
@@ -277,20 +277,22 @@ class SqueezeboxDevice extends Homey.Device {
               else this.setCapabilityValue('speaker_shuffle', true);
             }
 
-            if (capabilities.indexOf('speaker_track') >= 0) {
-              if (util.hasValue(reply.playlist_loop[0].title)) this.setCapabilityValue('speaker_track', reply.playlist_loop[0].title);
-              else  this.setCapabilityValue('speaker_track', '');
-            };
+            if (util.hasValue(reply.playlist_loop)) {
+              if (capabilities.indexOf('speaker_track') >= 0) {
+                if (util.hasValue(reply.playlist_loop[0].title)) this.setCapabilityValue('speaker_track', reply.playlist_loop[0].title);
+                else  this.setCapabilityValue('speaker_track', '');
+              };
 
-            if (capabilities.indexOf('speaker_artist') >= 0) {
-              if (util.hasValue(reply.playlist_loop[0].artist)) this.setCapabilityValue('speaker_artist', reply.playlist_loop[0].artist);
-              else this.setCapabilityValue('speaker_artist', '');
-            };
+              if (capabilities.indexOf('speaker_artist') >= 0) {
+                if (util.hasValue(reply.playlist_loop[0].artist)) this.setCapabilityValue('speaker_artist', reply.playlist_loop[0].artist);
+                else this.setCapabilityValue('speaker_artist', '');
+              };
 
-            if (capabilities.indexOf('speaker_album') >= 0) {
-              if (util.hasValue(reply.playlist_loop[0].album)) this.setCapabilityValue('speaker_album', reply.playlist_loop[0].album);
-              else this.setCapabilityValue('speaker_album', '');
-            };
+              if (capabilities.indexOf('speaker_album') >= 0) {
+                if (util.hasValue(reply.playlist_loop[0].album)) this.setCapabilityValue('speaker_album', reply.playlist_loop[0].album);
+                else this.setCapabilityValue('speaker_album', '');
+              };
+            }
 
             /**
             var img_url = url + ':' + port + '/music/' + reply.playlist_loop[0].artwork_track_id + '/cover.jpg';

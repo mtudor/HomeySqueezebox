@@ -4,7 +4,7 @@ const Homey = require('homey');
 const SqueezeServer = require('squeezenode');
 const util = require('/lib/util.js');
 const moment = require('moment');
-const maxPlaylistCacheAge = 5; // In minutes
+const maxPlaylistCacheAge = 2; // In minutes
 
 class SqueezeboxApp extends Homey.App {
 
@@ -33,7 +33,7 @@ class SqueezeboxApp extends Homey.App {
               return Promise.resolve(true);
             })
             .catch(e => {
-              console.log(e);
+              console.log('3', e);
               return Promise.reject(e);
             });
         })
@@ -67,6 +67,7 @@ class SqueezeboxApp extends Homey.App {
                 return Promise.resolve(playlists);
               })
               .catch(e => {
+                console.log(e);
                 return Promise.reject(Homey.__("msg_deviceOffline", {"errorMsg": e}));
               });
           };
@@ -121,29 +122,16 @@ class SqueezeboxApp extends Homey.App {
       const url = protocol + server;
       const mySqueezeServer = new SqueezeServer(url, port);
 
-      return new Promise(function(resolve, reject){
-        mySqueezeServer.register()
-          .then(() => {
-
-            return new Promise(function(resolve, reject){
-              mySqueezeServer.players[id].loadPlaylist(playlistId)
-                .then(reply => {
-                  console.log(reply);
-                  resolve(reply);
-                })
-                .catch(e => {
-                  console.log(e);
-                  //TODO reject not working
-                  //reject(Homey.__("msg_unableToPlayPlaylist"));
-                });
+      return mySqueezeServer.register().then(() => {
+          return mySqueezeServer.players[id].loadPlaylist(playlistId).catch(e => {
+              console.log('1', e);
+              throw Error(Homey.__("msg_unableToPlayPlaylist"));
             });
-
-          })
-          .catch(e => {
-            reject(e);
-          });
-      });
-
+        })
+        .catch(e => {
+          console.log('2', e);
+          throw Error(e);
+        });
     }
 
 };

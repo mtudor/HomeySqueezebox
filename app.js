@@ -27,14 +27,14 @@ class SqueezeboxApp extends Homey.App {
           const id = args.device.getSetting('id');
           const playlistId = args.playlist.id;
 
-          this._playPlaylist(protocol, server, port, id, playlistId)
+          return this._playPlaylist(protocol, server, port, id, playlistId)
             .then(reply => {
               console.log(reply);
               return Promise.resolve(true);
             })
             .catch(e => {
               console.log('3', e);
-              return Promise.reject(e);
+              return Promise.reject('Error while starting playlist');
             });
         })
         .getArgument('playlist')

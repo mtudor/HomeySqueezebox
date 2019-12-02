@@ -1,0 +1,35 @@
+{
+  "name": "homeysqueezebox",
+  "version": "1.0.0",
+  "description": "Control your Logitech Squeezebox server and devices with your Athom Homey!",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "squeezenode": "git+https://github.com/Inversion-NL/squeezenode-1.git",
+    "moment": "^2.24.0"",
+    "node-fetch": "^2.6.0",
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inversion-NL/HomeySqueezebox.git"
+  },
+  "keywords": [
+        "homey",
+        "squeezebox",
+        "logitechmediaserver",
+        "smarthome",
+        "home automation"
+  ],
+  "author": "Robin van Kekem",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Inversion-NL/HomeySqueezebox/issues"
+  },
+  "homepage": "https://github.com/Inversion-NL/HomeySqueezebox#readme"
+}

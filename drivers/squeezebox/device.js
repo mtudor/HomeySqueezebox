@@ -16,10 +16,13 @@ class SqueezeboxDevice extends Homey.Device {
 
     this.setUnavailable(Homey.__('app.loading'));
 
-    var interval = this.getSetting('polling') || 60;
-    this._pollDevice(interval);
-
     const settings = this.getSettings();
+
+    this.log(settings);
+
+    var interval = settings.polling || 3;
+    interval = interval * 60 * 1000; // minutes
+    this._pollDevice(interval);
 
     this.registerCapabilityListener('speaker_playing', (value, opts) => {
 
@@ -222,8 +225,26 @@ class SqueezeboxDevice extends Homey.Device {
   }
 
   onDeleted() {
-    clearInterval(this.pollingInterval);
+
   }
+
+  onSettings(oldSettingsObj, newSettingsObj, changedKeysArr, callback) {
+
+    this.log(oldSettingsObj);
+    this.log(newSettingsObj);
+    this.log(changedKeysArr);
+
+    // Check if stationid settings is changed
+    if (changedKeysArr == 'polling') {
+      this.log('Settings changed for polling from ' + oldSettingsObj.polling + ' to ' + newSettingsObj.polling);
+
+      var interval = newSettingsObj.polling;
+
+      // et up a new polling interval
+      this._pollDevice(interval * 60 * 1000);
+      callback(null, true);
+    }
+}
 
   _getDeviceData() {
 
@@ -325,15 +346,13 @@ class SqueezeboxDevice extends Homey.Device {
       });
   }
 
-  _pollDevice(interval){
-
+  _pollDevice(interval) {
+    this.log('Polling every ' +  interval + ' minutes');
     clearInterval(this.pollingInterval);
-    clearInterval(this.pingInterval);
-
     this.pollingInterval = setInterval(() => {
       this.log('Fetching data for device ' + this.getSettings().id);
       this._getDeviceData();
-    }, 1000 * interval);
+    }, interval);
   }
 
 }

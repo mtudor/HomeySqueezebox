@@ -8,8 +8,8 @@
       "en": "Squeezebox2"
     },
     "description": {
-      "en": "Allows control of Squeezeboxes connected to a Logitech Media Server (LMS).",
-      "nl": "App om de Squeezeboxen gekoppeld aan een Logitech Media Server (LMS) te besturen."
+      "en": "Allows control of Squeezeboxes, connected to a Logitech Media Server (LMS).",
+      "nl": "App om de Squeezeboxen, gekoppeld aan een Logitech Media Server (LMS), te besturen."
     },
     "tags": {
       "en": ["squeezebox", "music", "logitech media server", "lms", "speaker"]
@@ -64,7 +64,34 @@
                 {
                     "id": "start"
                 }
+            ],
+            "settings": [
+                {
+                    "type": "group",
+                    "label": {
+                      "en": "General settings",
+                      "nl": "Algemene instellingen"
+                    },
+                    "children": [
+                      {
+                        "id": "polling",
+                        "type": "number",
+                        "label": {
+                          "en": "Refresh server info",
+                          "nl": "Server informatie verversen"
+                        },
+                        "value": 3,
+                        "min": 1,
+                        "max": 15,
+                        "units": {
+                          "en": "minutes",
+                          "nl": "minuten"
+                        }
+                      }
+                    ]
+                  }
             ]
+
         }
     ],
     "flow": {
@@ -72,10 +99,12 @@
         {
           "id": "playPlaylist",
           "title": {
-              "en": "Play Playlist"
+              "en": "Play Playlist",
+              "nl": "Speel afspeellijst"
           },
           "hint": {
-              "en": "Select the playlist you'd like to play"
+              "en": "Select the playlist you'd like to play",
+              "nl": "Selecteer de afspeellijst die je wilt afspelen"
           },
           "args": [
               {
